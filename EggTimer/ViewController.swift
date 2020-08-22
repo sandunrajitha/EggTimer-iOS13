@@ -7,42 +7,35 @@
 //
 
 import UIKit
+import AVFoundation
 
 class ViewController: UIViewController {
     
     @IBOutlet weak var timeLabel: UILabel!
     
-    let soft = 5
-    let medium = 7
-    let hard = 12
+    @IBOutlet weak var eggProgress: UIProgressView?
     
-    var remainingTime: Int = 0
-    var timer:Timer?
     
     let eggTimes = ["Soft":3, "Medium":4, "Hard":7]
     
+    var remainingTime: Int = 0
+    var selectedTime = 0
+    var progressPercent: Float = 0
+    
+    var timer:Timer?
+    var alarmSound: AVAudioPlayer?
+    let audioPath = Bundle.main.path(forResource: "alarm_sound.mp3", ofType: nil)!
+    
+    
     @IBAction func buttonPressed(_ sender: UIButton) {
-        let userSelection = sender.currentTitle
-        
-        switch userSelection {
-        case "Soft":
-            print(eggTimes["Soft"]!)
-            remainingTime = eggTimes["Soft"]!
-            eggTimer ()
-            
-        case "Medium":
-            print(eggTimes["Medium"]!)
-            remainingTime = eggTimes["Medium"]!
-            eggTimer ()
-            
-        case "Hard":
-            print(eggTimes["Hard"]!)
-            remainingTime = eggTimes["Hard"]!
-            eggTimer ()
-            
-        default:
-            print("error")
-        }
+        let userSelection = sender.currentTitle!
+        eggProgress?.progress = 0
+
+        remainingTime = eggTimes[userSelection]!
+        selectedTime = eggTimes[userSelection]!
+        timeLabel.text = sender.currentTitle!
+        eggTimer ()
+
     }
     
     func eggTimer () {
@@ -52,13 +45,25 @@ class ViewController: UIViewController {
     }
     
     @objc func onTimerFires(){
+        
         remainingTime -= 1
-        print(remainingTime)
+        progressPercent = (Float(selectedTime - remainingTime)/Float(selectedTime))
+        print(progressPercent)
+        
+        eggProgress?.setProgress(progressPercent, animated: true)
         
         if remainingTime <= 0 {
             timer?.invalidate()
             timer = nil
             timeLabel.text = "DONE !"
+            
+            let audioURL = URL(fileURLWithPath: audioPath)
+            do {
+                alarmSound = try AVAudioPlayer(contentsOf: audioURL)
+                alarmSound?.play()
+            } catch {
+                // couldn't load file :(
+            }
         }
     }
     
